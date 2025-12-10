@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartGeo AI - Geotechnical Analyst</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Outfit', 'Cairo', 'sans-serif'],
+            },
+            colors: {
+              primary: '#6366f1',
+              secondary: '#0f172a',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      :root {
+        --font-ar: 'Cairo', sans-serif;
+        --font-en: 'Outfit', sans-serif;
+      }
+      body {
+        font-family: var(--font-ar);
+        background-color: #f8fafc;
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-size: 24px 24px;
+        color: #1e293b;
+      }
+      body.lang-en {
+        font-family: var(--font-en);
+        direction: ltr;
+      }
+      
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+      }
+      
+      @media print {
+        @page { size: A4; margin: 1cm; }
+        
+        /* Hide everything by default */
+        body {
+          background: white !important;
+          overflow: visible !important;
+        }
+
+        /* Hide the main app container and header explicitly */
+        #main-app-content, header, .no-print {
+          display: none !important;
+        }
+
+        /* Show and position the results modal */
+        .printable-content {
+          display: block !important;
+          position: static !important; /* Static allows flow over multiple pages */
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+          visibility: visible !important;
+          background: white !important;
+          z-index: 9999;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        .printable-content * {
+          visibility: visible !important;
+        }
+        
+        .glass-panel {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+            background: white !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-markdown": "https://aistudiocdn.com/react-markdown@^10.1.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.32.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
