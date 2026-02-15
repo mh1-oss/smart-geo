@@ -30,6 +30,32 @@ const defaultLabData: ManualLabData = {
   cAlpha: 0.005 // Default secondary comp
 };
 
+// Stable Components (defined outside App to prevent re-creation on every render)
+const LabelWithTooltip = ({ label, tooltip }: { label: string; tooltip: string }) => (
+  <div className="flex items-center gap-1 absolute -top-2 right-3 px-1 bg-white">
+    <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest transition-colors">{label}</span>
+    <div className="group relative cursor-help">
+      <span className="text-[10px] text-slate-400 border border-slate-300 rounded-full w-3 h-3 flex items-center justify-center">?</span>
+      <div className="absolute bottom-full right-0 mb-2 w-48 bg-slate-800 text-white text-xs p-2 rounded shadow-lg hidden group-hover:block z-50">
+        {tooltip}
+      </div>
+    </div>
+  </div>
+);
+
+const InputGroup = ({ label, tooltip, value, onChange, type = "number", placeholder = "" }: any) => (
+  <div className="relative group">
+    <LabelWithTooltip label={label} tooltip={tooltip} />
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full p-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm group-hover:border-indigo-200"
+    />
+  </div>
+);
+
 function App() {
   const [lang, setLang] = useState<Language>('ar');
   const [activeInputTab, setActiveInputTab] = useState<'foundation' | 'layers'>('foundation');
@@ -146,32 +172,6 @@ function App() {
     setShowResults(true);
     setShowHistory(false);
   };
-
-  // Modern Input Component with Tooltip
-  const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }) => (
-    <div className="flex items-center gap-1 absolute -top-2 right-3 px-1 bg-white">
-      <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest transition-colors">{label}</span>
-      <div className="group relative cursor-help">
-        <span className="text-[10px] text-slate-400 border border-slate-300 rounded-full w-3 h-3 flex items-center justify-center">?</span>
-        <div className="absolute bottom-full right-0 mb-2 w-48 bg-slate-800 text-white text-xs p-2 rounded shadow-lg hidden group-hover:block z-50">
-          {tooltip}
-        </div>
-      </div>
-    </div>
-  );
-
-  const InputGroup = ({ label, tooltip, value, onChange, type = "number", placeholder = "" }: any) => (
-    <div className="relative group">
-      <LabelWithTooltip label={label} tooltip={tooltip} />
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="w-full p-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm group-hover:border-indigo-200"
-      />
-    </div>
-  );
 
   return (
     <div className="min-h-screen pb-20 font-sans text-slate-800">

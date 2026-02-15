@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { SoilLayer, FoundationData, AnalysisResult, CalibrationRecord, Language, ChatMessage } from "../types";
+import { SoilLayer, FoundationData, AnalysisResult, Language, ChatMessage } from "../types";
 import { runFullAnalysis, CalculationOutput } from "./calculationEngine";
 
 

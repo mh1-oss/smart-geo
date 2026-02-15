@@ -1,5 +1,5 @@
 
-import { SoilLayer, FoundationData, CalibrationRecord, Language, AnalysisResult, SoilType } from "../types";
+import { SoilLayer, FoundationData, CalibrationRecord, Language, AnalysisResult } from "../types";
 import { runFullAnalysis, CalculationOutput } from "./calculationEngine";
 
 /**
