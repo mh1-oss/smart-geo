@@ -21,31 +21,29 @@ export const analyzeSoilProfile = async (
   layers: SoilLayer[],
   foundation: FoundationData,
   calibrationData: CalibrationRecord[],
-  lang: Language
+  lang: Language,
+  onAIComplete?: (data: { doctorReport: string; recommendations: any; designNotes: string }) => void
 ): Promise<AnalysisResult> => {
 
-  // Step 1: Run deterministic calculations
+  // Step 1: Run deterministic calculations (Instant)
   const calcResult = runFullAnalysis(layers, foundation);
 
-  // Step 2: Generate AI report text (non-blocking, with fallback)
-  let doctorReport = '';
-  let recommendations = { solutions: [] as string[], riskLevel: 'Medium' as string };
-  let designNotes = '';
+  // Step 2: Generate Fallback Report (Instant)
+  const fallback = generateFallbackReport(calcResult, lang);
 
-  try {
-    const aiReport = await generateAIReport(calcResult, layers, foundation, lang);
-    doctorReport = aiReport.doctorReport;
-    recommendations = aiReport.recommendations;
-    designNotes = aiReport.designNotes;
-  } catch (error) {
-    console.warn('AI report generation failed, using fallback:', error);
-    const fallback = generateFallbackReport(calcResult, lang);
-    doctorReport = fallback.doctorReport;
-    recommendations = fallback.recommendations;
-    designNotes = fallback.designNotes;
+  // Step 3: Start AI Report in Background (Non-blocking)
+  if (onAIComplete) {
+    generateAIReport(calcResult, layers, foundation, lang)
+      .then(aiReport => {
+        onAIComplete(aiReport);
+      })
+      .catch(err => {
+        console.warn('Background AI generation failed (using fallback):', err);
+        // No need to notify UI, it already has fallback
+      });
   }
 
-  // Step 3: Merge
+  // Step 4: Return Immediate Result
   const result: AnalysisResult = {
     timestamp: Date.now(),
     layers: calcResult.layers,
@@ -54,15 +52,15 @@ export const analyzeSoilProfile = async (
     slopeStability: calcResult.slopeStability,
     foundationDesign: {
       ...calcResult.foundationDesign,
-      notes: designNotes || calcResult.foundationDesign.notes,
+      notes: fallback.designNotes,
     },
     femAnalysis: calcResult.femAnalysis,
     recommendations: {
-      solutions: recommendations.solutions,
-      riskLevel: recommendations.riskLevel as 'Low' | 'Medium' | 'High',
+      solutions: fallback.recommendations.solutions,
+      riskLevel: fallback.recommendations.riskLevel as 'Low' | 'Medium' | 'High',
     },
     graphs: calcResult.graphs,
-    doctorReport,
+    doctorReport: fallback.doctorReport,
   };
 
   return result;
