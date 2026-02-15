@@ -114,13 +114,21 @@ async function generateAIReport(
     Return ONLY valid JSON with keys: doctorReport, recommendations, designNotes.
   `;
 
-  const response = await ai.models.generateContent({
+  // Create a timeout promise (8 seconds)
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("AI generation timed out")), 8000)
+  );
+
+  const generationPromise = ai.models.generateContent({
     model,
     contents: prompt,
     config: {
       responseMimeType: "application/json",
     },
   });
+
+  // Race AI against timeout
+  const response = await Promise.race([generationPromise, timeoutPromise]) as any;
 
   if (!response.text) {
     throw new Error("AI returned empty response");
