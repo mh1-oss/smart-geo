@@ -91,21 +91,8 @@ function App() {
   const handleAnalysis = async () => {
     setLoading(true);
     try {
-      // Callback for background AI update
-      const onAIComplete = (aiData: any) => {
-        setResult((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            doctorReport: aiData.doctorReport,
-            recommendations: { ...prev.recommendations, ...aiData.recommendations },
-            foundationDesign: { ...prev.foundationDesign, notes: aiData.designNotes },
-            isAiGenerating: false, // Turn off flag when done
-          };
-        });
-      };
-
-      const data = await analyzeSoilProfile(layers, foundation, calibrationData, lang, onAIComplete);
+      // 100% Deterministic & Instant
+      const data = analyzeSoilProfile(layers, foundation, calibrationData, lang);
       setResult(data);
       setShowResults(true);
 
@@ -121,9 +108,36 @@ function App() {
 
     } catch (error) {
       console.error(error);
-      alert('Connection Error');
+      alert('Analysis Error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEnhanceReport = async () => {
+    if (!result) return;
+
+    // Set loading flag for UI
+    setResult(prev => prev ? ({ ...prev, isAiGenerating: true }) : null);
+
+    try {
+      const { enhanceReportWithAI } = await import('./services/geminiService');
+      const aiData = await enhanceReportWithAI(result, layers, foundation, lang);
+
+      setResult(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          doctorReport: aiData.doctorReport,
+          recommendations: { ...prev.recommendations, ...aiData.recommendations },
+          foundationDesign: { ...prev.foundationDesign, notes: aiData.designNotes },
+          isAiGenerating: false
+        };
+      });
+    } catch (error) {
+      console.error(error);
+      alert(lang === 'ar' ? 'فشل الاتصال بالذكاء الاصطناعي' : 'AI Connection Failed');
+      setResult(prev => prev ? ({ ...prev, isAiGenerating: false }) : null);
     }
   };
 
@@ -210,7 +224,7 @@ function App() {
           </div>
 
           <div className="max-w-7xl mx-auto p-6">
-            <ResultsDashboard results={result} lang={lang} />
+            <ResultsDashboard results={result} lang={lang} onEnhance={handleEnhanceReport} />
           </div>
         </div>
       )}

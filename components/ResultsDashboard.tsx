@@ -9,9 +9,10 @@ import {
 interface Props {
     results: AnalysisResult;
     lang: Language;
+    onEnhance: () => void;
 }
 
-export const ResultsDashboard: React.FC<Props> = ({ results, lang }) => {
+export const ResultsDashboard: React.FC<Props> = ({ results, lang, onEnhance }) => {
     const [activeTab, setActiveTab] = useState<'summary' | 'design' | 'fem' | 'solutions' | 'report' | 'ai'>('summary');
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
     const [chatInput, setChatInput] = useState('');
@@ -138,8 +139,8 @@ export const ResultsDashboard: React.FC<Props> = ({ results, lang }) => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === tab.id
-                                    ? 'bg-slate-900 text-white shadow-md transform scale-105'
-                                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                                ? 'bg-slate-900 text-white shadow-md transform scale-105'
+                                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                                 }`}
                         >
                             <span className="opacity-80">{tab.icon}</span>
@@ -454,6 +455,20 @@ export const ResultsDashboard: React.FC<Props> = ({ results, lang }) => {
                 {/* REPORT TAB - DOCUMENT STYLE */}
                 {activeTab === 'report' && (
                     <div className="bg-white p-12 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 animate-fade-in max-w-4xl mx-auto">
+
+                        {/* AI Enhance Button */}
+                        {!results.isAiGenerating && (
+                            <div className="flex justify-end mb-6 no-print">
+                                <button
+                                    onClick={onEnhance}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold transition-all shadow-lg hover:shadow-indigo-200 flex items-center gap-2 group animate-bounce-subtle"
+                                >
+                                    <span className="text-lg">✨</span>
+                                    <span>{lang === 'ar' ? 'توليد تقرير احترافي (AI)' : 'Generate AI Report'}</span>
+                                </button>
+                            </div>
+                        )}
+
                         <div className="flex justify-between items-end border-b-2 border-slate-900 pb-6 mb-8">
                             <div>
                                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">Geotechnical Report</h1>
@@ -507,8 +522,8 @@ export const ResultsDashboard: React.FC<Props> = ({ results, lang }) => {
                             {chatHistory.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-start' : 'justify-end'}`}>
                                     <div className={`max-w-[85%] p-5 rounded-3xl shadow-sm leading-relaxed ${msg.role === 'user'
-                                            ? 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
-                                            : 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-200'
+                                        ? 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
+                                        : 'bg-indigo-600 text-white rounded-tr-none shadow-indigo-200'
                                         }`}>
                                         <div className="prose prose-sm prose-invert max-w-none">
                                             <ReactMarkdown>{msg.text}</ReactMarkdown>

@@ -17,13 +17,12 @@ const getAIClient = () => {
  * 2. Sends results to Gemini AI to generate text report + recommendations
  * 3. Merges both into a single AnalysisResult
  */
-export const analyzeSoilProfile = async (
+export const analyzeSoilProfile = (
   layers: SoilLayer[],
   foundation: FoundationData,
   calibrationData: CalibrationRecord[],
-  lang: Language,
-  onAIComplete?: (data: { doctorReport: string; recommendations: any; designNotes: string }) => void
-): Promise<AnalysisResult> => {
+  lang: Language
+): AnalysisResult => {
 
   // Step 1: Run deterministic calculations (Instant)
   const calcResult = runFullAnalysis(layers, foundation);
@@ -31,19 +30,7 @@ export const analyzeSoilProfile = async (
   // Step 2: Generate Fallback Report (Instant)
   const fallback = generateFallbackReport(calcResult, lang);
 
-  // Step 3: Start AI Report in Background (Non-blocking)
-  if (onAIComplete) {
-    generateAIReport(calcResult, layers, foundation, lang)
-      .then(aiReport => {
-        onAIComplete(aiReport);
-      })
-      .catch(err => {
-        console.warn('Background AI generation failed (using fallback):', err);
-        // No need to notify UI, it already has fallback
-      });
-  }
-
-  // Step 4: Return Immediate Result
+  // Step 3: Return Immediate Result
   const result: AnalysisResult = {
     timestamp: Date.now(),
     layers: calcResult.layers,
@@ -61,10 +48,26 @@ export const analyzeSoilProfile = async (
     },
     graphs: calcResult.graphs,
     doctorReport: fallback.doctorReport,
-    isAiGenerating: !!onAIComplete, // Set flag if AI is running in background
+    isAiGenerating: false,
   };
 
   return result;
+};
+
+/**
+ * On-Demand AI enhancement
+ */
+export const enhanceReportWithAI = async (
+  currentResult: AnalysisResult,
+  layers: SoilLayer[],
+  foundation: FoundationData,
+  lang: Language
+): Promise<{ doctorReport: string; recommendations: any; designNotes: string }> => {
+  // Re-run deterministic part to get CalculationOutput structure required by AI
+  // (Alternatively, we could pass CalculationOutput if we stored it, but it's fast to re-calc)
+  const calcResult = runFullAnalysis(layers, foundation);
+
+  return await generateAIReport(calcResult, layers, foundation, lang);
 };
 
 /**
