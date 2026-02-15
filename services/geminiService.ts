@@ -2,7 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { SoilLayer, FoundationData, AnalysisResult, CalibrationRecord, Language, ChatMessage } from "../types";
 import { runFullAnalysis, CalculationOutput } from "./calculationEngine";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = process.env.API_KEY || "";
+const ai = new GoogleGenAI({ apiKey });
 
 /**
  * Main analysis function:
@@ -76,6 +77,10 @@ async function generateAIReport(
   const langInstruction = lang === 'ar'
     ? "Write ALL text strictly in ARABIC."
     : "Write ALL text strictly in ENGLISH.";
+
+  if (!process.env.API_KEY) {
+    throw new Error("API Key is missing (Offline Mode)");
+  }
 
   const prompt = `
     Role: You are an Expert Geotechnical Report Writer.
@@ -219,6 +224,12 @@ export const askGeoExpert = async (
   const systemInstruction = lang === 'ar'
     ? "You are a specialized geotechnical engineering assistant. Use the provided analysis results to answer user questions clearly in Arabic. Be professional and academic."
     : "You are a specialized geotechnical engineering assistant. Use the provided analysis results to answer user questions clearly in English. Be professional and academic.";
+
+  if (!process.env.API_KEY) {
+    return lang === 'ar'
+      ? "عذراً، الخدمة غير متوفرة حالياً (مفتاح API مفقود). يرجى التأكد من إعدادات الموقع."
+      : "Sorry, service unavailable (Missing API Key). Please check site settings.";
+  }
 
   const contextStr = JSON.stringify({
     summary: {
