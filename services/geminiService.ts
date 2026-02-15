@@ -3,6 +3,7 @@ import { SoilLayer, FoundationData, AnalysisResult, CalibrationRecord, Language,
 import { runFullAnalysis, CalculationOutput } from "./calculationEngine";
 
 
+
 // Helper to get AI instance safely
 const getAIClient = () => {
   const apiKey = process.env.API_KEY;
@@ -11,48 +12,6 @@ const getAIClient = () => {
 };
 
 
-/**
- * Main analysis function:
- * 1. Runs deterministic calculation engine for all numerical results
- * 2. Sends results to Gemini AI to generate text report + recommendations
- * 3. Merges both into a single AnalysisResult
- */
-export const analyzeSoilProfile = (
-  layers: SoilLayer[],
-  foundation: FoundationData,
-  calibrationData: CalibrationRecord[],
-  lang: Language
-): AnalysisResult => {
-
-  // Step 1: Run deterministic calculations (Instant)
-  const calcResult = runFullAnalysis(layers, foundation);
-
-  // Step 2: Generate Fallback Report (Instant)
-  const fallback = generateFallbackReport(calcResult, lang);
-
-  // Step 3: Return Immediate Result
-  const result: AnalysisResult = {
-    timestamp: Date.now(),
-    layers: calcResult.layers,
-    bearingCapacity: calcResult.bearingCapacity,
-    settlement: calcResult.settlement,
-    slopeStability: calcResult.slopeStability,
-    foundationDesign: {
-      ...calcResult.foundationDesign,
-      notes: fallback.designNotes,
-    },
-    femAnalysis: calcResult.femAnalysis,
-    recommendations: {
-      solutions: fallback.recommendations.solutions,
-      riskLevel: fallback.recommendations.riskLevel as 'Low' | 'Medium' | 'High',
-    },
-    graphs: calcResult.graphs,
-    doctorReport: fallback.doctorReport,
-    isAiGenerating: false,
-  };
-
-  return result;
-};
 
 /**
  * On-Demand AI enhancement
@@ -144,88 +103,6 @@ async function generateAIReport(
   }
 
   return JSON.parse(jsonString);
-}
-
-/**
- * Fallback report when AI is unavailable
- */
-function generateFallbackReport(
-  calcResult: CalculationOutput,
-  lang: Language
-): { doctorReport: string; recommendations: { solutions: string[]; riskLevel: string }; designNotes: string } {
-  const bc = calcResult.bearingCapacity;
-  const st = calcResult.settlement;
-  const fd = calcResult.foundationDesign;
-
-  const riskLevel = bc.factorOfSafety < 2 ? 'High' : bc.factorOfSafety < 3 ? 'Medium' : 'Low';
-
-  if (lang === 'ar') {
-    return {
-      doctorReport: `# تقرير التحليل الجيوتقني
-
-## قدرة التحمل (طريقة Vesic)
-- قدرة التحمل القصوى: **${bc.q_ult} kPa**
-- قدرة التحمل المسموحة: **${bc.q_allow} kPa**
-- معامل الأمان الفعلي: **${bc.factorOfSafety}**
-- المعاملات: Nc=${bc.factors.Nc}, Nq=${bc.factors.Nq}, Nγ=${bc.factors.Ngamma}
-
-## تحليل الهبوط
-- الهبوط الكلي: **${st.total} ملم**
-  - مرن: ${st.elastic} ملم
-  - انضمام أولي: ${st.primary} ملم
-  - انضمام ثانوي: ${st.secondary} ملم
-- زمن الهبوط الأقصى: **${st.timeToMaxSettlement}**
-- الحالة: **${st.status}**
-
-## التصميم الإنشائي
-- السمك الأدنى: **${fd.minThickness} م**
-- حديد التسليح: **${fd.barSuggestion}** (${fd.reinforcementArea} ملم²/م)
-- فحص القص الثاقب: **${fd.punchingShearCheck}**`,
-      recommendations: {
-        solutions: [
-          'مراجعة معامل الأمان مع الأحمال الزلزالية',
-          'إجراء اختبارات تحميل حقلية للتحقق',
-          'مراقبة الهبوط أثناء وبعد الإنشاء',
-          'التأكد من مستوى المياه الجوفية خلال الحفر',
-        ],
-        riskLevel,
-      },
-      designNotes: `تم تصميم الأساس وفق متطلبات كود ACI 318. السمك الأدنى ${fd.minThickness} م يحقق متطلبات القص الثاقب. حديد التسليح ${fd.barSuggestion} يتجاوز الحد الأدنى المطلوب.`,
-    };
-  }
-
-  return {
-    doctorReport: `# Geotechnical Analysis Report
-
-## Bearing Capacity (Vesic's Method)
-- Ultimate Bearing Capacity: **${bc.q_ult} kPa**
-- Allowable Bearing Capacity: **${bc.q_allow} kPa**
-- Actual Factor of Safety: **${bc.factorOfSafety}**
-- Factors: Nc=${bc.factors.Nc}, Nq=${bc.factors.Nq}, Nγ=${bc.factors.Ngamma}
-
-## Settlement Analysis
-- Total Settlement: **${st.total} mm**
-  - Elastic: ${st.elastic} mm
-  - Primary Consolidation: ${st.primary} mm
-  - Secondary Consolidation: ${st.secondary} mm
-- Time to Max Settlement: **${st.timeToMaxSettlement}**
-- Status: **${st.status}**
-
-## Structural Design
-- Minimum Thickness: **${fd.minThickness} m**
-- Reinforcement: **${fd.barSuggestion}** (${fd.reinforcementArea} mm²/m)
-- Punching Shear: **${fd.punchingShearCheck}**`,
-    recommendations: {
-      solutions: [
-        'Review factor of safety considering seismic loading conditions',
-        'Perform field plate load tests for verification',
-        'Monitor settlement during and after construction',
-        'Verify groundwater level during excavation',
-      ],
-      riskLevel,
-    },
-    designNotes: `Foundation designed per ACI 318 requirements. Minimum thickness of ${fd.minThickness} m satisfies punching shear requirements. Provided reinforcement ${fd.barSuggestion} exceeds minimum required area.`,
-  };
 }
 
 export const askGeoExpert = async (

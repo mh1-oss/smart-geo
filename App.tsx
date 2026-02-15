@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SoilLayer, SoilType, FoundationData, AnalysisResult, CalibrationRecord, ManualLabData, Language, AnalysisHistoryItem } from './types';
-import { analyzeSoilProfile } from './services/geminiService';
+import { analyzeSoilProfile } from './services/analysisService';
 import { SoilVisualizer } from './components/SoilVisualizer';
 import { ResultsDashboard } from './components/ResultsDashboard';
 
