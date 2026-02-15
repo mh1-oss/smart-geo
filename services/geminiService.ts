@@ -2,8 +2,14 @@ import { GoogleGenAI } from "@google/genai";
 import { SoilLayer, FoundationData, AnalysisResult, CalibrationRecord, Language, ChatMessage } from "../types";
 import { runFullAnalysis, CalculationOutput } from "./calculationEngine";
 
-const apiKey = process.env.API_KEY || "";
-const ai = new GoogleGenAI({ apiKey });
+
+// Helper to get AI instance safely
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("API Key is missing");
+  return new GoogleGenAI({ apiKey });
+};
+
 
 /**
  * Main analysis function:
@@ -73,14 +79,12 @@ async function generateAIReport(
   lang: Language
 ): Promise<{ doctorReport: string; recommendations: { solutions: string[]; riskLevel: string }; designNotes: string }> {
   const model = "gemini-2.5-flash";
+  const ai = getAIClient();
 
   const langInstruction = lang === 'ar'
     ? "Write ALL text strictly in ARABIC."
     : "Write ALL text strictly in ENGLISH.";
 
-  if (!process.env.API_KEY) {
-    throw new Error("API Key is missing (Offline Mode)");
-  }
 
   const prompt = `
     Role: You are an Expert Geotechnical Report Writer.
@@ -219,29 +223,26 @@ export const askGeoExpert = async (
   currentContext: AnalysisResult,
   lang: Language
 ): Promise<string> => {
-  const model = "gemini-2.5-flash";
+  try {
+    const ai = getAIClient();
+    const model = "gemini-2.5-flash";
 
-  const systemInstruction = lang === 'ar'
-    ? "You are a specialized geotechnical engineering assistant. Use the provided analysis results to answer user questions clearly in Arabic. Be professional and academic."
-    : "You are a specialized geotechnical engineering assistant. Use the provided analysis results to answer user questions clearly in English. Be professional and academic.";
+    const systemInstruction = lang === 'ar'
+      ? "You are a specialized geotechnical engineering assistant. Use the provided analysis results to answer user questions clearly in Arabic. Be professional and academic."
+      : "You are a specialized geotechnical engineering assistant. Use the provided analysis results to answer user questions clearly in English. Be professional and academic.";
 
-  if (!process.env.API_KEY) {
-    return lang === 'ar'
-      ? "عذراً، الخدمة غير متوفرة حالياً (مفتاح API مفقود). يرجى التأكد من إعدادات الموقع."
-      : "Sorry, service unavailable (Missing API Key). Please check site settings.";
-  }
 
-  const contextStr = JSON.stringify({
-    summary: {
-      settlement: currentContext.settlement,
-      bearingCapacity: currentContext.bearingCapacity,
-      slope: currentContext.slopeStability,
-      design: currentContext.foundationDesign
-    },
-    soil: currentContext.layers
-  });
+    const contextStr = JSON.stringify({
+      summary: {
+        settlement: currentContext.settlement,
+        bearingCapacity: currentContext.bearingCapacity,
+        slope: currentContext.slopeStability,
+        design: currentContext.foundationDesign
+      },
+      soil: currentContext.layers
+    });
 
-  const prompt = `
+    const prompt = `
     Context (Analysis Results): ${contextStr}
 
     User Chat History:
@@ -250,13 +251,19 @@ export const askGeoExpert = async (
     Instruction: Provide a helpful, concise answer to the last user query based on the Context.
   `;
 
-  const response = await ai.models.generateContent({
-    model: model,
-    contents: prompt,
-    config: {
-      systemInstruction: systemInstruction
-    }
-  });
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction
+      }
+    });
 
-  return response.text || (lang === 'ar' ? "عذراً، لم أستطع توليد إجابة." : "Sorry, I could not generate an answer.");
+    return response.text || (lang === 'ar' ? "عذراً، لم أستطع توليد إجابة." : "Sorry, I could not generate an answer.");
+  } catch (error) {
+    console.error("AI Chat Error:", error);
+    return lang === 'ar'
+      ? "عذراً، الخدمة غير متوفرة حالياً (مفتاح API مفقود أو خطأ في الاتصال)."
+      : "Sorry, service unavailable (Missing API Key or Connection Error).";
+  }
 };
