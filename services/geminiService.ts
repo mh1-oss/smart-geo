@@ -61,6 +61,7 @@ export const analyzeSoilProfile = async (
     },
     graphs: calcResult.graphs,
     doctorReport: fallback.doctorReport,
+    isAiGenerating: !!onAIComplete, // Set flag if AI is running in background
   };
 
   return result;

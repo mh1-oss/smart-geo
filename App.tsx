@@ -99,7 +99,8 @@ function App() {
             ...prev,
             doctorReport: aiData.doctorReport,
             recommendations: { ...prev.recommendations, ...aiData.recommendations },
-            foundationDesign: { ...prev.foundationDesign, notes: aiData.designNotes }
+            foundationDesign: { ...prev.foundationDesign, notes: aiData.designNotes },
+            isAiGenerating: false, // Turn off flag when done
           };
         });
       };

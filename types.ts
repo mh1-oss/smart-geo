@@ -33,13 +33,13 @@ export interface SoilLayer {
 export interface FoundationData {
   width: number; // B
   length: number; // L
-  diameter?: number; 
+  diameter?: number;
   depth: number; // Df
   load: number; // Applied Load (kN)
   moment?: number; // Applied Moment (kN.m)
   type: 'isolated' | 'raft' | 'strip' | 'circular';
   shapeFactor?: number;
-  groundwaterDepth: number; 
+  groundwaterDepth: number;
   concreteGrade: number; // fc' in MPa
   steelGrade: number; // fy in MPa
   slopeAngle?: number; // Slope inclination in degrees
@@ -62,9 +62,9 @@ export interface SimulationPoint {
 }
 
 export interface StressNode {
-  x: number; 
-  z: number; 
-  stress: number; 
+  x: number;
+  z: number;
+  stress: number;
 }
 
 export interface AnalysisResult {
@@ -120,10 +120,10 @@ export interface AnalysisResult {
     maxVonMisesStress: number;
     plasticPoints: string;
     meshNodes: number;
-    stressMesh: StressNode[]; 
+    stressMesh: StressNode[];
   };
   recommendations: {
-    solutions: string[]; 
+    solutions: string[];
     riskLevel: 'Low' | 'Medium' | 'High';
   };
   graphs: {
@@ -132,6 +132,7 @@ export interface AnalysisResult {
     timeSettlement: SimulationPoint[]; // Time vs Settlement
   };
   doctorReport: string;
+  isAiGenerating?: boolean; // UI Flag for background AI generation
 }
 
 export interface ChatMessage {
